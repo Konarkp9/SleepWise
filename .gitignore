@@ -5,6 +5,14 @@ dist/
 
 # dependencies
 node_modules/
+.env
+*.pyc
+__pycache__/
+.DS_Store
+dist/
+.env.local
+.env.*.local
+logs.log
 
 # logs
 npm-debug.log*
@@ -12,13 +20,34 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-
 # environment variables
-.env
 .env.production
 
 # macOS-specific files
-.DS_Store
 
 # jetbrains setting folder
 .idea/
+
+# Python-specific ignores
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.venv
+venv/
+ENV/

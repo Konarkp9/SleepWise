@@ -1,39 +1,260 @@
 ---
-import { getCollection } from 'astro:content';
-
 import BaseLayout from '../layouts/BaseLayout.astro';
-
 import ContactCTA from '../components/ContactCTA.astro';
-import PortfolioPreview from '../components/PortfolioPreview.astro';
 import Hero from '../components/Hero.astro';
-import Grid from '../components/Grid.astro';
-
-const projects = (await getCollection('work')).sort(
-	(a, b) => b.data.publishDate.valueOf() - a.data.publishDate.valueOf(),
-);
 ---
 
 <BaseLayout
-	title="My Work | Jeanine White"
-	description="Learn about Jeanine White's most recent projects"
+	title="Health Prediction | Vancouver AI"
+	description="Get personalized health predictions and recommendations"
 >
 	<div class="stack gap-20">
-		<main class="wrapper stack gap-8">
-			<Hero
-				title="My Work"
-				tagline="See my most recent projects below to get an idea of my past experience."
-				align="start"
-			/>
-			<Grid variant="offset">
-				{
-					projects.map((project) => (
-						<li>
-							<PortfolioPreview project={project} />
-						</li>
-					))
-				}
-			</Grid>
+		<main class="wrapper">
+			<header class="hero">
+				<Hero
+					title="Health Prediction"
+					tagline="Get personalized health predictions and recommendations based on your daily activities."
+					align="start"
+				/>
+				<div class="roles">
+					<div class="pill">Machine Learning</div>
+					<div class="pill">Healthcare</div>
+					<div class="pill">IoT</div>
+				</div>
+			</header>
+
+			<div class="stack gap-10">
+				<section class="section-content">
+					<div class="content-grid">
+						<div class="text-content">
+							<h3 class="section-title">The Spark</h3>
+							<p>
+								The idea didn't come from a lab or a lecture. It came from a late-night brainstorming session, 
+								where ideas bounce around like lofi beats on loop. We started talking about the Internet of Things (IoT)—the 
+								network of connected devices that's quietly powering our homes, cities, and now, healthcare.
+							</p>
+						</div>
+					</div>
+				</section>
+
+				<section class="section-content">
+					<div class="content-grid">
+						<div class="text-content">
+							<h3 class="section-title">Why Sleep?</h3>
+							<p>
+								Sleep is tied to everything—stress, chronic conditions, mental health. If you improve sleep, 
+								you improve health. And here's the kicker: Wearables already track sleep-related data like 
+								heart rate, motion, and sleep stages. The data is there; it just isn't being used to its 
+								full potential.
+							</p>
+						</div>
+					</div>
+				</section>
+
+				<section class="section-content">
+					<h3 class="section-title">Building SleepWise</h3>
+					<div class="cards-grid">
+						<div class="feature-card">
+							<h4>The Dataset</h4>
+							<p>
+								We used a dataset by Olivia Walch and her team. It had everything we needed—heart 
+								rate, motion, and gold-standard sleep labels. It was clean, reliable, and a perfect 
+								starting point for our model.
+							</p>
+						</div>
+						<div class="feature-card">
+							<h4>The Model</h4>
+							<p>
+								For the modeling, we turned to PyCaret, a low-code library that let us quickly compare 
+								machine learning algorithms. KNN stood out for its simplicity and speed, which are 
+								key for real-time applications.
+							</p>
+						</div>
+						<div class="feature-card">
+							<h4>Future Integration</h4>
+							<p>
+								We're working on connecting this to APIs from Fitbit, Apple Watch, and WHOOP. 
+								Imagine real-time data flowing into a system that predicts how tonight's sleep 
+								could change based on your daily activity.
+							</p>
+						</div>
+					</div>
+				</section>
+
+				<section class="section-content">
+					<h3 class="section-title">The Future Vision</h3>
+					<div class="vision-content">
+						<p class="vision-text">
+							The future of healthcare is predictive, personalized, and participatory. 
+							With wearable-based digital twins, we could:
+						</p>
+						<div class="benefits-grid">
+							<div class="benefit-item">
+								<div class="benefit-number">01</div>
+								<p>Simulate real-life scenarios to accelerate research and drug trials</p>
+							</div>
+							<div class="benefit-item">
+								<div class="benefit-number">02</div>
+								<p>Enable clinicians to predict and prevent complications with real-time monitoring</p>
+							</div>
+							<div class="benefit-item">
+								<div class="benefit-number">03</div>
+								<p>Give individuals the tools to take control of their health in ways that are tailored and actionable</p>
+							</div>
+						</div>
+					</div>
+				</section>
+			</div>
 		</main>
+
 		<ContactCTA />
 	</div>
 </BaseLayout>
+
+<style>
+	.hero {
+		display: flex;
+		flex-direction: column;
+		align-items: start;
+		gap: 2rem;
+		padding-bottom: 3rem;
+		border-bottom: 1px solid var(--gray-800);
+		margin-bottom: 3rem;
+	}
+
+	.roles {
+		display: flex;
+		gap: 0.5rem;
+	}
+
+	.pill {
+		padding: 0.5rem 1rem;
+		background-color: var(--gray-999);
+		border: 1px solid var(--gray-800);
+		border-radius: 999rem;
+		font-size: var(--text-sm);
+		color: var(--gray-300);
+		transition: color 0.2s ease, border-color 0.2s ease;
+	}
+
+	.section-content {
+		margin-bottom: 3rem;
+	}
+
+	.section-title {
+		font-size: var(--text-2xl);
+		color: var(--gray-0);
+		margin-bottom: 1.5rem;
+	}
+
+	.content-grid {
+		max-width: 65ch;
+		margin: 0 auto;
+	}
+
+	.text-content {
+		font-size: var(--text-lg);
+		color: var(--gray-300);
+		line-height: 1.6;
+	}
+
+	.cards-grid {
+		display: grid;
+		gap: 2rem;
+		grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+		margin-top: 2rem;
+	}
+
+	.feature-card {
+		padding: 1.5rem;
+		background: var(--gray-999_40);
+		border: 1px solid var(--gray-800);
+		border-radius: 0.75rem;
+		height: 100%;
+	}
+
+	.feature-card h4 {
+		font-size: var(--text-xl);
+		color: var(--gray-100);
+		margin-bottom: 1rem;
+	}
+
+	.benefits-grid {
+		display: grid;
+		gap: 2rem;
+		grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+		margin-top: 2rem;
+	}
+
+	.benefit-item {
+		position: relative;
+		padding: 2rem;
+		padding-left: 3rem;
+		background: var(--gray-999_40);
+		border: 1px solid var(--gray-800);
+		border-radius: 0.75rem;
+		height: 100%;
+	}
+
+	.benefit-number {
+		position: absolute;
+		left: 1rem;
+		top: 1.5rem;
+		font-size: var(--text-xl);
+		font-weight: bold;
+		color: var(--accent-regular);
+	}
+
+	.vision-content {
+		max-width: 85ch;
+		margin: 0 auto;
+	}
+
+	.vision-text {
+		font-size: var(--text-xl);
+		text-align: center;
+		margin-bottom: 2rem;
+		color: var(--gray-200);
+	}
+
+	.wrapper {
+		padding-inline: 1.5rem;
+		max-width: 85ch;
+		margin-inline: auto;
+	}
+
+	.stack {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.gap-10 {
+		gap: 2.5rem;
+	}
+
+	.gap-20 {
+		gap: 5rem;
+	}
+
+	@media (min-width: 50em) {
+		.hero {
+			align-items: center;
+			text-align: center;
+		}
+
+		.feature-card {
+			padding: 2.5rem;
+		}
+
+		.benefit-item {
+			padding: 2.5rem;
+			padding-left: 4rem;
+		}
+
+		.benefit-number {
+			font-size: var(--text-2xl);
+			left: 1.5rem;
+			top: 2rem;
+		}
+	}
+</style>

@@ -1,0 +1,445 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ContactCTA from '../components/ContactCTA.astro';
+import Hero from '../components/Hero.astro';
+---
+
+<BaseLayout
+	title="Health Prediction | Vancouver AI"
+	description="Get personalized health predictions and recommendations"
+>
+	<div class="stack gap-20">
+		<div class="stack gap-15">
+			<header>
+				<div class="wrapper stack gap-2">
+					<Hero
+						title="Health Prediction"
+						tagline="Get personalized health predictions and recommendations based on your daily activities."
+						align="start"
+					/>
+				</div>
+			</header>
+			<main class="wrapper stack gap-8">
+				<div class="content">
+					<div class="graph-container">
+						<div class="chart-grid">
+							<div class="chart-item">
+								<h3>Health Metrics</h3>
+								<canvas id="radarChart"></canvas>
+							</div>
+							<div class="chart-item">
+								<h3>Overall Health</h3>
+								<canvas id="gaugeChart"></canvas>
+							</div>
+						</div>
+						<div class="progress-container">
+							<div class="progress-item">
+								<h4>Daily Steps Goal</h4>
+								<div class="progress-bar-container">
+									<div id="stepsProgress" class="progress-bar"></div>
+								</div>
+								<div class="progress-label" id="stepsLabel">0/10,000</div>
+							</div>
+							<div class="progress-item">
+								<h4>Heart Rate Zone</h4>
+								<div class="progress-bar-container">
+									<div id="heartRateProgress" class="progress-bar"></div>
+								</div>
+								<div class="progress-label" id="heartRateLabel">0 BPM</div>
+							</div>
+						</div>
+					</div>
+					<form id="healthForm" class="health-form">
+						<div class="form-group">
+							<label for="activityLevel">Activity Level:</label>
+							<select id="activityLevel" name="activityLevel" required>
+								<option value="Low">Low</option>
+								<option value="Moderate" selected>Moderate</option>
+								<option value="High">High</option>
+							</select>
+						</div>
+						<div class="form-group">
+							<label for="heartRate">Heart Rate (bpm):</label>
+							<input 
+								type="number" 
+								id="heartRate" 
+								name="heartRate" 
+								min="40" 
+								max="200" 
+								value="75" 
+								required
+							/>
+						</div>
+						<div class="form-group">
+							<label for="steps">Daily Steps:</label>
+							<input 
+								type="number" 
+								id="steps" 
+								name="steps" 
+								min="0" 
+								max="100000" 
+								value="5000" 
+								required
+							/>
+						</div>
+						<button type="submit" class="submit-btn">Get Prediction</button>
+					</form>
+					<div id="results" class="results hidden">
+						<div class="result-card">
+							<h3>Sleep Quality Prediction</h3>
+							<p id="prediction"></p>
+						</div>
+						<div class="result-card">
+							<h3>Health Score</h3>
+							<p id="healthScore"></p>
+						</div>
+						<div class="result-card">
+							<h3>Suggestions</h3>
+							<p id="suggestions" style="white-space: pre-line;"></p>
+						</div>
+					</div>
+				</div>
+			</main>
+		</div>
+		<ContactCTA />
+	</div>
+</BaseLayout>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+	const API_URL = import.meta.env.PUBLIC_API_URL || 'https://sleepwise-backend.onrender.com';
+	let radarChart, gaugeChart;
+
+	// Format number with commas and decimals
+	function formatNumber(num, decimals = 1) {
+		return Number(num).toLocaleString('en-US', {
+			minimumFractionDigits: decimals,
+			maximumFractionDigits: decimals
+		});
+	}
+
+	function initializeCharts() {
+		// Initialize Radar Chart
+		const radarCtx = document.getElementById('radarChart').getContext('2d');
+		radarChart = new Chart(radarCtx, {
+			type: 'radar',
+			data: {
+				labels: ['Heart Rate', 'Steps', 'Activity', 'Sleep', 'Recovery'],
+				datasets: [{
+					label: 'Current',
+					data: [0, 0, 0, 0, 0],
+					borderColor: 'rgb(75, 192, 192)',
+					backgroundColor: 'rgba(75, 192, 192, 0.2)',
+				}]
+			},
+			options: {
+				scales: {
+					r: {
+						min: 0,
+						max: 100,
+						ticks: {
+							stepSize: 20
+						}
+					}
+				},
+				plugins: {
+					legend: {
+						display: false
+					}
+				}
+			}
+		});
+
+		// Initialize Gauge Chart
+		const gaugeCtx = document.getElementById('gaugeChart').getContext('2d');
+		gaugeChart = new Chart(gaugeCtx, {
+			type: 'doughnut',
+			data: {
+				datasets: [{
+					data: [0, 100],
+					backgroundColor: [
+						'rgb(75, 192, 192)',
+						'rgb(201, 203, 207)'
+					],
+					circumference: 180,
+					rotation: 270,
+				}]
+			},
+			options: {
+				plugins: {
+					legend: {
+						display: false
+					}
+				},
+				cutout: '75%'
+			}
+		});
+	}
+
+	function updateCharts(healthScore, heartRate, steps, activityLevel) {
+		// Update Radar Chart
+		const activityScore = activityLevel === 'High' ? 90 : activityLevel === 'Moderate' ? 70 : 50;
+		const heartRateScore = Math.max(0, Math.min(100, (70 - Math.abs(heartRate - 70))));
+		const stepsScore = Math.min(100, (steps / 10000) * 100);
+		
+		radarChart.data.datasets[0].data = [
+			heartRateScore,
+			stepsScore,
+			activityScore,
+			healthScore,
+			(heartRateScore + stepsScore) / 2
+		];
+		radarChart.update();
+
+		// Update Gauge Chart
+		gaugeChart.data.datasets[0].data = [healthScore, 100 - healthScore];
+		gaugeChart.update();
+
+		// Update Progress Bars
+		const stepsProgress = document.getElementById('stepsProgress');
+		const stepsLabel = document.getElementById('stepsLabel');
+		const stepsPercentage = Math.min(100, (steps / 10000) * 100);
+		stepsProgress.style.width = `${stepsPercentage}%`;
+		stepsLabel.textContent = `${formatNumber(steps, 0)}/10,000`;
+
+		const heartRateProgress = document.getElementById('heartRateProgress');
+		const heartRateLabel = document.getElementById('heartRateLabel');
+		const heartRatePercentage = Math.max(0, Math.min(100, (70 - Math.abs(heartRate - 70))));
+		heartRateProgress.style.width = `${heartRatePercentage}%`;
+		heartRateLabel.textContent = `${heartRate} BPM`;
+	}
+
+	async function handleSubmit(event) {
+		event.preventDefault();
+		
+		const formData = new FormData(event.target);
+		const data = {
+			heartRate: parseInt(formData.get('heartRate')),
+			steps: parseInt(formData.get('steps')),
+			activityLevel: formData.get('activityLevel')
+		};
+
+		try {
+			console.log('Sending request to:', `${API_URL}/predict`);
+			console.log('Request data:', data);
+
+			const response = await fetch(`${API_URL}/predict`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'Accept': 'application/json'
+				},
+				body: JSON.stringify(data),
+				mode: 'cors'
+			});
+
+			console.log('Response status:', response.status);
+			
+			if (!response.ok) {
+				const errorText = await response.text();
+				console.error('Server error:', errorText);
+				throw new Error(`Server returned ${response.status}: ${errorText}`);
+			}
+
+			const result = await response.json();
+			console.log('Response data:', result);
+			
+			if (!result.sleepQuality || !result.healthScore || !result.suggestions) {
+				throw new Error('Invalid response format from server');
+			}
+			
+			document.getElementById('prediction').textContent = result.sleepQuality;
+			document.getElementById('healthScore').textContent = formatNumber(result.healthScore);
+			document.getElementById('suggestions').textContent = result.suggestions;
+			
+			document.getElementById('results').classList.remove('hidden');
+			
+			// Update visualizations
+			updateCharts(
+				parseFloat(result.healthScore),
+				data.heartRate,
+				data.steps,
+				data.activityLevel
+			);
+			
+		} catch (error) {
+			console.error('Error details:', error);
+			alert(`Error: ${error.message || 'An error occurred. Please try again.'}`);
+		}
+	}
+
+	document.addEventListener('DOMContentLoaded', () => {
+		const form = document.getElementById('healthForm');
+		form.addEventListener('submit', handleSubmit);
+		initializeCharts();
+	});
+</script>
+
+<style>
+	.health-form {
+		max-width: 600px;
+		margin: 0 auto;
+		padding: 2rem;
+		background: var(--gray-999);
+		border-radius: 0.75rem;
+		box-shadow: var(--shadow-sm);
+	}
+
+	.form-group {
+		margin-bottom: 1.5rem;
+	}
+
+	.form-group label {
+		display: block;
+		margin-bottom: 0.5rem;
+		color: var(--gray-200);
+	}
+
+	.form-group input,
+	.form-group select {
+		width: 100%;
+		padding: 0.5rem;
+		border: 1px solid var(--gray-800);
+		border-radius: 0.25rem;
+		background: var(--gray-999);
+		color: var(--gray-200);
+	}
+
+	.submit-btn {
+		width: 100%;
+		padding: 0.75rem;
+		background: var(--gradient-accent);
+		border: none;
+		border-radius: 0.25rem;
+		color: var(--gray-999);
+		font-weight: 500;
+		cursor: pointer;
+	}
+
+	.submit-btn:hover {
+		background: var(--gradient-accent-orange);
+	}
+
+	.results {
+		margin-top: 2rem;
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+		gap: 1rem;
+	}
+
+	.result-card {
+		padding: 1.5rem;
+		background: var(--gray-999);
+		border-radius: 0.75rem;
+		box-shadow: var(--shadow-sm);
+	}
+
+	.result-card h3 {
+		margin: 0 0 1rem;
+		color: var(--gray-0);
+		font-size: 1.5rem;
+		font-weight: 600;
+	}
+
+	.result-card p {
+		color: var(--gray-200);
+		line-height: 1.6;
+		font-size: 1.125rem;
+	}
+
+	#healthScore {
+		font-size: 2.5rem;
+		font-weight: 600;
+		background: var(--gradient-accent);
+		-webkit-background-clip: text;
+		-webkit-text-fill-color: transparent;
+		margin: 0;
+	}
+
+	#prediction {
+		font-size: 2rem;
+		font-weight: 600;
+		color: var(--gray-0);
+		margin: 0;
+	}
+
+	#suggestions {
+		color: var(--gray-200);
+		line-height: 1.8;
+		margin: 0;
+		padding: 0;
+	}
+
+	.hidden {
+		display: none;
+	}
+
+	.chart-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+		gap: 2rem;
+		margin-bottom: 2rem;
+	}
+
+	.chart-item {
+		background: var(--gray-999);
+		border-radius: 0.75rem;
+		padding: 1.5rem;
+		box-shadow: var(--shadow-sm);
+	}
+
+	.chart-item h3 {
+		margin: 0 0 1rem;
+		color: var(--gray-0);
+		font-size: 1.25rem;
+		text-align: center;
+	}
+
+	.progress-container {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+		gap: 1.5rem;
+		margin-top: 2rem;
+	}
+
+	.progress-item {
+		background: var(--gray-999);
+		border-radius: 0.75rem;
+		padding: 1.25rem;
+		box-shadow: var(--shadow-sm);
+	}
+
+	.progress-item h4 {
+		margin: 0 0 1rem;
+		color: var(--gray-0);
+		font-size: 1rem;
+	}
+
+	.progress-bar-container {
+		width: 100%;
+		height: 8px;
+		background: var(--gray-800);
+		border-radius: 4px;
+		margin-bottom: 0.5rem;
+	}
+
+	.progress-bar {
+		height: 100%;
+		width: 0;
+		background: var(--gradient-accent);
+		border-radius: 4px;
+		transition: width 0.3s ease;
+	}
+
+	.progress-label {
+		color: var(--gray-200);
+		font-size: 0.875rem;
+		text-align: right;
+	}
+
+	canvas {
+		max-width: 100%;
+		height: auto;
+	}
+</style>
