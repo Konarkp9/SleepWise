@@ -221,6 +221,10 @@ import Hero from '../components/Hero.astro';
 		};
 
 		try {
+			const submitButton = event.target.querySelector('button[type="submit"]');
+			submitButton.disabled = true;
+			submitButton.textContent = 'Loading...';
+
 			console.log('Sending request to:', `${API_URL}/predict`);
 			console.log('Request data:', data);
 
@@ -235,6 +239,7 @@ import Hero from '../components/Hero.astro';
 			});
 
 			console.log('Response status:', response.status);
+			console.log('Response headers:', Object.fromEntries([...response.headers]));
 			
 			if (!response.ok) {
 				const errorText = await response.text();
@@ -266,6 +271,10 @@ import Hero from '../components/Hero.astro';
 		} catch (error) {
 			console.error('Error details:', error);
 			alert(`Error: ${error.message || 'An error occurred. Please try again.'}`);
+		} finally {
+			const submitButton = event.target.querySelector('button[type="submit"]');
+			submitButton.disabled = false;
+			submitButton.textContent = 'Get Prediction';
 		}
 	}
 

@@ -15,7 +15,8 @@ app = Flask(__name__)
 ALLOWED_ORIGINS = [
     'http://localhost:4321',  # Local development
     'http://127.0.0.1:4321',  # Local development alternative
-    'https://sleepwise.netlify.app',  # Production frontend
+    'https://sleep-wise.netlify.app',  # Production frontend
+    'https://sleepwise.netlify.app',   # Alternative production frontend
     'https://*.netlify.app'  # Any Netlify preview deployments
 ]
 
@@ -23,17 +24,20 @@ CORS(app, resources={
     r"/*": {
         "origins": ALLOWED_ORIGINS,
         "methods": ["GET", "POST", "OPTIONS"],
-        "allow_headers": ["Content-Type"]
+        "allow_headers": ["Content-Type", "Authorization", "Accept"],
+        "supports_credentials": False,
+        "max_age": 3600
     }
 })
 
 @app.after_request
 def after_request(response):
     origin = request.headers.get('Origin')
-    if origin in ALLOWED_ORIGINS:
+    if origin and (origin in ALLOWED_ORIGINS or any(origin.endswith(domain.replace('*', '')) for domain in ALLOWED_ORIGINS if '*' in domain)):
         response.headers.add('Access-Control-Allow-Origin', origin)
-    response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
-    response.headers.add('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept')
+        response.headers.add('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        response.headers.add('Access-Control-Max-Age', '3600')
     return response
 
 def activity_to_acceleration(level):
