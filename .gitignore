@@ -1,4 +1,5 @@
-# build output
+ cd /Users/macbookair/Desktop/VancouverAI-Website/radiant-radiation
+ npm run build  # Build the Astro project# build output
 dist/
 # generated types
 .astro/
